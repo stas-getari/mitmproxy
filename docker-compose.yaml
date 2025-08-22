@@ -1,0 +1,16 @@
+services:
+  mitmproxy:
+    build: .
+    volumes:
+      - ./:/code
+      - ./certificate:/home/mitmproxy/.mitmproxy
+    container_name: mitmproxy
+    ports:
+      - 8080:8080
+    command: python3 start_mitm.py
+    env_file:
+      - .env
+    restart: always
+    network_mode: host
+    cap_add:
+      - NET_ADMIN

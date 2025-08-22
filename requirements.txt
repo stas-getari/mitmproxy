@@ -1,3 +1,1 @@
-motor==3.3.2
-mitmproxy==10.2.2
-pyyaml==5.4.1
+motor==3.7.1

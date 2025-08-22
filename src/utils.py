@@ -1,9 +1,28 @@
+import hashlib
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 
+from db import clients
 
 FILES_DIR = "/home/mitmproxyuser/Downloads/"
+
+# Global variables set during initialization
+ip_address = hostname = client = None
+platforms = {
+    "tinder": ["tinder"],
+    "okcupid": ["okcupid"],
+    "match": ["match"],
+    "bumble": ["bumble"],
+    "hinge": ["hinge", "sendbird"],
+}
+
+
+async def initialize_client_info():
+    global ip_address, hostname, client
+    ip_address = os.popen("hostname -I").read().strip().split(" ")[0]
+    hostname = os.popen("hostname").read().strip()
+    client = await clients.find_one({"vidaId": hostname})
 
 
 def process_request_response(flow):
@@ -12,43 +31,51 @@ def process_request_response(flow):
     response = flow.response
     request_headers = dict(request.headers)
     response_headers = dict(response.headers)
+    datetime_now = datetime.now(timezone.utc)
+    platform = next((k for k, v in platforms.items() if any(p in request.pretty_host for p in v)), "unknown")
 
-    try:    request_body = json.loads(request.content)
-    except: request_body = request.content.decode('utf-8', 'replace')
-    
-    try:    response_body = json.loads(response.content)
-    except: response_body = response.content.decode('utf-8', 'replace')
+    # Parse response body as JSON if possible, otherwise keep as string
+    decoded_response = response.content.decode("utf-8", "replace")
+    try:
+        response_body = json.loads(decoded_response)
+    except:
+        response_body = decoded_response
 
-    if type(request_body)  == "str" and len(request_body)  > 1000: request_body  = "Request body too long"
-    if type(response_body) == "str" and len(response_body) > 1000: response_body = "Response body too long"
-
-    # get the hostname of linux machine that script running on. And also get it's IP address
-    hostname = os.popen("hostname").read().strip()
-    ip_address = os.popen("hostname -I").read().strip()
+    # Parse request body as JSON if possible, otherwise keep as string
+    decoded_request = request.content.decode("utf-8", "replace")
+    try:
+        request_body = json.loads(decoded_request)
+    except:
+        request_body = decoded_request
 
     log_entry = {
-        "server": hostname,
-        "server_ip": ip_address,
-        "timestamp": datetime.now().isoformat(),
-        "status_code": response.status_code,
-        "reason": response.reason,
-        "http_version": response.http_version,
+        # New schema fields (matching the MongoDB structure)
+        "clientId": client["_id"] if client else None,
+        "url": f"{request.scheme}://{request.pretty_host}{request.path}",
+        "response": response_body,
+        "platform": platform,
         "method": request.method,
+        "payload": request_body,
+        "createdAt": datetime_now,
+        "updatedAt": datetime_now,
+        # Additional mitmproxy-specific fields (useful to keep)
+        "server": hostname,
+        "serverIp": ip_address,
+        "statusCode": response.status_code,
+        "reason": response.reason,
+        "httpVersion": response.http_version,
         "scheme": request.scheme,
         "host": request.host,
         "site": request.pretty_host,
         "path": request.path.split("?")[0],
         "query": request.query,
-        "request_headers": request_headers,
-        "response_headers": response_headers,
-        "request_body": request_body,
-        "response_body": response_body,
-        # "url": request.url,
+        "requestHeaders": request_headers,
+        "responseHeaders": response_headers,
         # "response_length": len(response_body),
         # "response_time": response.timestamp_end - response.timestamp_start,
     }
 
-    return {k: v for k,v in log_entry.items() if v}
+    return {k: v for k, v in log_entry.items() if v}
 
 
 def save_file(flow, log_entry):
@@ -57,7 +84,7 @@ def save_file(flow, log_entry):
 
     if content and "image" in content_type:  # Adjust conditions as needed
         # Handle as a file, save it, and log the path in the same MongoDB document.
-        
+
         # Extract or generate a filename
         file_name = flow.request.path.split("?")[0].split("/")[-1]
         if not file_name:
@@ -65,7 +92,7 @@ def save_file(flow, log_entry):
             file_name = hashlib.md5(content).hexdigest()
 
         file_path = os.path.join(FILES_DIR, file_name)
-        
+
         # Save the file
         with open(file_path, "wb") as file_out:
             file_out.write(content)
@@ -78,17 +105,57 @@ def save_file(flow, log_entry):
 
 
 def process_websocket(flow):
-    # direction = "->" if message.from_client else "<-"
-    # message_content = message.content.decode('utf-8', 'ignore')  # Assuming it's text. Use 'ignore' to avoid decoding errors 
+    """Extracts relevant information from WebSocket messages."""
+    request = flow.request
+    datetime_now = datetime.now(timezone.utc)
+    platform = next((k for k, v in platforms.items() if any(p in request.pretty_host for p in v)), "unknown")
+
+    # Process WebSocket messages into serializable format
+    messages_data = []
+    if flow.websocket and flow.websocket.messages:
+        for message in flow.websocket.messages:
+            try:
+                # Decode message content, similar to how request/response bodies are handled
+                if isinstance(message.content, bytes):
+                    decoded_content = message.content.decode("utf-8", "replace")
+                else:
+                    decoded_content = str(message.content)
+
+                # Try to parse as JSON if possible, otherwise keep as string
+                try:
+                    message_body = json.loads(decoded_content)
+                except:
+                    message_body = decoded_content
+
+                message_data = {
+                    "content": message_body,
+                    "direction": "outgoing" if message.from_client else "incoming",
+                    "createdAt": datetime.fromtimestamp(message.timestamp, timezone.utc),
+                }
+                messages_data.append(message_data)
+            except Exception as e:
+                print(f"Error processing WebSocket message: {e}")
 
     log_entry = {
-        "timestamp": datetime.now().isoformat(),
-        "type": "websocket",
-        "id": flow.id,
-        # "message_direction": direction,
-        # "message_content": message_content,
-        "messages": list(flow.websocket.messages)
-        # Additional fields as necessary
+        # New schema fields (matching the MongoDB structure)
+        "clientId": client["_id"] if client else None,
+        "url": f"{request.scheme}://{request.pretty_host}{request.path}",
+        "response": messages_data,  # Store messages in response field
+        "platform": platform,
+        "method": "WEBSOCKET",
+        "payload": None,  # WebSockets don't have initial payload like HTTP
+        "createdAt": datetime_now,
+        "updatedAt": datetime_now,
+        # Additional mitmproxy-specific fields (useful to keep)
+        "server": hostname,
+        "serverIp": ip_address,
+        "scheme": request.scheme,
+        "host": request.host,
+        "site": request.pretty_host,
+        "path": request.path.split("?")[0],
+        "query": request.query,
+        "requestHeaders": dict(request.headers),
+        "messageCount": len(messages_data),
     }
 
-    return log_entry
+    return {k: v for k, v in log_entry.items() if v}
