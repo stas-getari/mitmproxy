@@ -145,8 +145,10 @@ export ANDROID_SDK_ROOT=/usr/bin
 source '$HOME/.nvm/nvm.sh'"
 echo "$ENV_VARS" | tee -a ~/.bashrc ~/.xsessionrc > /dev/null
 
-# download and install node 22
+# download nvm
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+
+# install node 22. Before that you need to re-login into the `user`
 nvm install 22
 
 # install npm packages
