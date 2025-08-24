@@ -18,19 +18,27 @@ def parse_static_proxy(static_proxy: str):
 
 
 async def main():
+    print("Starting mitmproxy initialization...")
+
     # Initialize and wait until client doc is available
+    print("Waiting for client info to be available...")
     while True:
         await utils.initialize_client_info()
         if utils.client:
+            print("Client info successfully loaded")
             break
+        print("Client info not ready, waiting 1 second...")
         await asyncio.sleep(1)
 
     static_proxy = utils.client["settings"].get("staticProxy")
+    print(f"Static proxy setting: {static_proxy}")
 
     host, port, username, password = parse_static_proxy(static_proxy)
+    print(f"Parsed proxy config - Host: {host}, Port: {port}, Username: {username}")
 
     # fmt: off
     if host and port:
+        print("Configuring upstream proxy mode...")
         cmd = [
             "mitmdump",
             "--mode", f"upstream:http://{host}:{port}",
@@ -40,6 +48,7 @@ async def main():
             "--scripts", "logs_to_mongodb.py",
         ]
     else:
+        print("Configuring transparent proxy mode...")
         cmd = [
             "mitmdump",
             "--mode", "transparent",
@@ -48,6 +57,8 @@ async def main():
             "--scripts", "logs_to_mongodb.py",
         ]
 
+    print(f"Executing command: {' '.join(cmd)}")
+    print("Starting mitmdump process...")
     os.execvp(cmd[0], cmd)
 
 

@@ -58,7 +58,7 @@ LAN_INTERFACE=eth0
 PROXY_IP=$(hostname -I | awk '{print $1}')
 iptables -t nat -N PROXY
 iptables -t nat -A PREROUTING -i $LAN_INTERFACE -p tcp --dport 443 -j PROXY
-iptables -t nat -A PROXY -p tcp --dport 443 -j DNAT --to-destination $PROXY_IP:8080
+iptables -t nat -A PROXY -p tcp -j DNAT --to-destination $PROXY_IP:8080
 EOF
 
 # Make it executable
@@ -174,5 +174,5 @@ update-ca-certificates  # update the system certificates
 
 # as I see there is some issue with locale when you open shell: "can’t set the locale; make sure $LC_* and $LANG are correct"
 # if you see that, then run command:
-locale-gen "en_US.UTF-8"`
+locale-gen "en_US.UTF-8"
 ```
