@@ -171,4 +171,8 @@ bash -c '. ~/.nvm/nvm.sh && nvm use default >/dev/null 2>&1 && npm run dev:worke
 su root
 cp /srv/mitmproxy/certificate/mitmproxy-ca-cert.pem /usr/local/share/ca-certificates/mitmproxy.crt
 update-ca-certificates  # update the system certificates
+
+# as I see there is some issue with locale when you open shell: "can’t set the locale; make sure $LC_* and $LANG are correct"
+# if you see that, then run command:
+locale-gen "en_US.UTF-8"`
 ```
