@@ -23,6 +23,9 @@ async def initialize_client_info():
     ip_address = os.popen("hostname -I").read().strip().split(" ")[0]
     hostname = os.popen("hostname").read().strip().replace("-auto-web", "")
     client = await clients.find_one({"vidaId": hostname})
+    print(f"IP address: {ip_address}", flush=True)
+    print(f"Hostname: {hostname}", flush=True)
+    print(f"Client info: {client}", flush=True)
 
 
 def process_request_response(flow):
