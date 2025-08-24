@@ -25,7 +25,6 @@ async def initialize_client_info():
     client = await clients.find_one({"vidaId": hostname})
     print(f"IP address: {ip_address}", flush=True)
     print(f"Hostname: {hostname}", flush=True)
-    print(f"Client info: {client}", flush=True)
 
 
 def process_request_response(flow):
