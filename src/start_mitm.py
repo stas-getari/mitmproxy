@@ -7,9 +7,13 @@ import utils
 
 def parse_static_proxy(static_proxy: str):
     # Expected exact format: host:port@username:password
-    host_port, creds = static_proxy.split("@", 1)
-    host, port = host_port.split(":", 1)
-    username, password = creds.split(":", 1)
+    if static_proxy:
+        host_port, creds = static_proxy.split("@", 1)
+        host, port = host_port.split(":", 1)
+        username, password = creds.split(":", 1)
+    else:
+        host = port = username = password = None
+
     return host, port, username, password
 
 
