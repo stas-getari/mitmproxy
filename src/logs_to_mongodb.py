@@ -1,5 +1,5 @@
 from db import logs
-from utils import initialize_client_info, process_request_response, process_websocket, save_file
+from utils import initialize_client_info, process_request_response, process_websocket
 
 from mitmproxy import http
 

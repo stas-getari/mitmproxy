@@ -38,14 +38,14 @@ def process_request_response(flow):
     decoded_response = response.content.decode("utf-8", "replace")
     try:
         response_body = json.loads(decoded_response)
-    except:
+    except Exception:
         response_body = decoded_response
 
     # Parse request body as JSON if possible, otherwise keep as string
     decoded_request = request.content.decode("utf-8", "replace")
     try:
         request_body = json.loads(decoded_request)
-    except:
+    except Exception:
         request_body = decoded_request
 
     log_entry = {

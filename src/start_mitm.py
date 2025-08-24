@@ -25,6 +25,7 @@ async def main():
 
     host, port, username, password = parse_static_proxy(static_proxy)
 
+    # fmt: off
     if host and port:
         cmd = [
             "mitmdump",
@@ -48,5 +49,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-
-
