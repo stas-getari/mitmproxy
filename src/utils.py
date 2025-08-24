@@ -21,7 +21,7 @@ platforms = {
 async def initialize_client_info():
     global ip_address, hostname, client
     ip_address = os.popen("hostname -I").read().strip().split(" ")[0]
-    hostname = os.popen("hostname").read().strip()
+    hostname = os.popen("hostname").read().strip().replace("-auto-web", "")
     client = await clients.find_one({"vidaId": hostname})
 
 
@@ -124,7 +124,7 @@ def process_websocket(flow):
                 # Try to parse as JSON if possible, otherwise keep as string
                 try:
                     message_body = json.loads(decoded_content)
-                except:
+                except Exception:
                     message_body = decoded_content
 
                 message_data = {
