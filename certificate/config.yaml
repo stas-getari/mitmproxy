@@ -1,4 +1,5 @@
 # that file was manually created by me (Stas) and it affect any instance of mitmproxy on that server
+block_global: false
 ignore_hosts: [
   # '31\.222\.67\.\d+', '3\.127\.187\.\d+', # bumble.com
   # '142\.250\.\d+.\d+', '216\.58\.\d+.\d+',  # googleapis
