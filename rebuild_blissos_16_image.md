@@ -1,5 +1,5 @@
 - mount .iso and extract it's content
-```
+```sh
 cd /srv
 mkdir /mnt/iso
 mount -o loop /var/lib/vz/template/iso/Bliss-v16.9.6-x86_64-OFFICIAL-gapps-20240602.iso /mnt/iso  # mount original .iso as new partition in /mnt/iso
@@ -10,7 +10,7 @@ rm -r /mnt/iso
 ```
 
 - mount .efs file that containes .img file inside it. Extract it's content
-```
+```sh
 mkdir -p /mnt/efs
 mount -t erofs -o loop /srv/iso/system.efs /mnt/efs
 mkdir /srv/efs
@@ -20,7 +20,7 @@ rm -r /mnt/efs
 ```
 
 - mount .img that contains all android os files. Extract it's content
-```
+```sh
 mkdir /mnt/img
 mount -t ext4 -o loop /srv/efs/system.img /mnt/img
 mkdir /srv/img
@@ -29,7 +29,7 @@ umount /mnt/img
 ```
 
 - rebuild new .img
-```
+```sh
 dd if=/dev/zero of=/srv/system.img bs=4096 count=1280000
 mkfs.ext4 -F -O "ext_attr,dir_index,filetype,extent,sparse_super,large_file,huge_file,uninit_bg,dir_nlink,extra_isize" system.img
 mount -o loop system.img /mnt/img
@@ -41,7 +41,7 @@ rm -r /mnt/img
 ```
 
 - rebuild new .efs
-```
+```sh
 mv /srv/system.img /srv/efs/
 chown nobody:nogroup /srv/efs/system.img
 chmod 644 /srv/efs/system.img
@@ -50,7 +50,7 @@ mkfs.erofs -zlz4 /srv/system.efs /srv/efs
 ```
 
 - build new .iso image
-```
+```sh
 mv /srv/system.efs /srv/iso/
 chown nobody:nogroup /srv/iso/system.efs
 chmod 644 /srv/iso/system.efs
@@ -60,7 +60,7 @@ mv new_bliss.iso /var/lib/vz/template/iso/
 ```
 
 - delete all traces of your work
-```
+```sh
 rm -r /srv/iso
 rm -r /srv/efs
 rm -r /srv/img
