@@ -47,6 +47,11 @@ chown 1000:1000 -R /srv/dating-engine
 sed -i 's/^#*net\.ipv4\.ip_forward.*/net.ipv4.ip_forward=1/' /etc/sysctl.conf
 sed -i 's/^#*net\.ipv6\.conf\.all\.forwarding.*/net.ipv6.conf.all.forwarding=1/' /etc/sysctl.conf
 sed -i 's/^#*net\.ipv4\.conf\.all\.send_redirects.*/net.ipv4.conf.all.send_redirects = 0/' /etc/sysctl.conf
+
+# install adb and other android dependencies
+apt-get install -y \
+    android-tools-adb \
+    android-sdk-build-tools
 ```
 
 ## configure iptables
@@ -87,7 +92,6 @@ systemctl start proxy-iptables.service
 ```
 
 ## `user` config
-
 ```sh
 # create new user by name `user` and also activate xrdp for him
 # make sure you provide password for him
