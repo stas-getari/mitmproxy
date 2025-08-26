@@ -171,7 +171,7 @@ npm install
 # make sure you configured it as 'Run in Terminal'
 bash -c '. ~/.nvm/nvm.sh && nvm use default >/dev/null 2>&1 && npm run dev:worker'
 
-# as root user!!! copy mitmproxy cert to system directory
+# as root user!!! copy mitmproxy cert to system directory. We need that in case if we want to intercept also traffic originated from the LXC
 su root
 cp /srv/mitmproxy/certificate/mitmproxy-ca-cert.pem /usr/local/share/ca-certificates/mitmproxy.crt
 update-ca-certificates  # update the system certificates
