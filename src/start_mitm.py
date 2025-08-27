@@ -5,10 +5,10 @@ import os
 import utils
 
 
-def parse_static_proxy(static_proxy: str):
+def parse_proxy_config(proxy: str):
     # Expected exact format: host:port@username:password
-    if static_proxy:
-        host_port, creds = static_proxy.split("@", 1)
+    if proxy:
+        host_port, creds = proxy.split("@", 1)
         host, port = host_port.split(":", 1)
         username, password = creds.split(":", 1)
     else:
@@ -30,14 +30,17 @@ async def main():
         print("Client info not ready, waiting 1 second...", flush=True)
         await asyncio.sleep(1)
 
-    static_proxy = utils.client["settings"].get("staticProxy")
-    print(f"Static proxy setting: {static_proxy}", flush=True)
-
-    host, port, username, password = parse_static_proxy(static_proxy)
-    print(f"Parsed proxy config - Host: {host}, Port: {port}, Username: {username}", flush=True)
+    # Parse proxy config from client settings
+    host = port = username = password = None
+    if static_proxy := utils.client["settings"].get("staticProxy"):
+        print(f"Static proxy setting: {static_proxy}", flush=True)
+        host, port, username, password = parse_proxy_config(static_proxy)
+    elif dynamic_proxy := utils.client["settings"].get("dynamicProxy"):
+        print(f"Dynamic proxy setting: {dynamic_proxy}", flush=True)
+        host, port, username, password = parse_proxy_config(dynamic_proxy)
 
     # fmt: off
-    if host and port:
+    if host and port and username and password:
         print("Configuring upstream proxy mode...", flush=True)
         cmd = [
             "mitmdump",
