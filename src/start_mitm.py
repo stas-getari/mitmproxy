@@ -51,14 +51,9 @@ async def main():
             "--scripts", "logs_to_mongodb.py",
         ]
     else:
-        print("Configuring transparent proxy mode...", flush=True)
-        cmd = [
-            "mitmdump",
-            "--mode", "transparent",
-            "--set", "confdir=/home/mitmproxy/.mitmproxy",
-            "--showhost",
-            "--scripts", "logs_to_mongodb.py",
-        ]
+        print("No proxy config found, waiting for 1 minute before retrying...", flush=True)
+        await asyncio.sleep(60)
+        return await main()
 
     print(f"Executing command: {' '.join(cmd)}", flush=True)
     print("Starting mitmdump process...", flush=True)
