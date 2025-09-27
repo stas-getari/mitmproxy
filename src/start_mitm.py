@@ -70,7 +70,7 @@ async def main():
             print("Failed to load proxy configuration", flush=True)
 
     # fmt: off
-    if proxy_config and proxy_config.get("host") and proxy_config.get("port") and proxy_config.get("username") and proxy_config.get("password"):
+    if proxy_config:
         print("Configuring upstream proxy mode...", flush=True)
         cmd = [
             "mitmdump",
