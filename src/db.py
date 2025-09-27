@@ -18,3 +18,4 @@ client.get_io_loop = asyncio.get_running_loop  # that line is very important to 
 
 logs = client["test"]["requestInterceptions"]
 clients = client["test"]["clients"]
+proxies = client["test"]["proxies"]

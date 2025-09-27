@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 import asyncio
 import os
+from bson import ObjectId
 
 import utils
+from db import clients, proxies
 
 
 def parse_proxy_config(proxy: str):
@@ -17,35 +19,64 @@ def parse_proxy_config(proxy: str):
     return host, port, username, password
 
 
+async def get_proxy_from_object_id(object_id: str):
+    """Fetch proxy configuration from MongoDB using objectId."""
+    try:
+        proxy_doc = await proxies.find_one({"_id": ObjectId(object_id)})
+        if proxy_doc:
+            return {
+                "host": proxy_doc["proxyAddress"],
+                "port": str(proxy_doc["port"]),
+                "username": proxy_doc["username"],
+                "password": proxy_doc["password"]
+            }
+    except Exception as e:
+        print(f"Error fetching proxy from MongoDB: {e}", flush=True)
+    return None
+
+
+async def get_proxy_config(proxy_setting):
+    """Get proxy configuration from either string format or MongoDB objectId."""
+    if not proxy_setting:
+        return None
+
+    # Check if it's a string format (host:port@username:password)
+    if isinstance(proxy_setting, str) and "@" in proxy_setting and ":" in proxy_setting:
+        host, port, username, password = parse_proxy_config(proxy_setting)
+        return { "host": host, "port": port, "username": username, "password": password}
+
+    # Check if it's an ObjectId object
+    elif isinstance(proxy_setting, ObjectId):
+        return await get_proxy_from_object_id(proxy_setting)
+
+    return None
+
+
 async def main():
     print("Starting mitmproxy initialization...", flush=True)
 
-    # Initialize and wait until client doc is available
-    print("Waiting for client info to be available...", flush=True)
-    while True:
-        await utils.initialize_client_info()
-        if utils.client:
-            print("Client info successfully loaded", flush=True)
-            break
-        print("Client info not ready, waiting 1 second...", flush=True)
-        await asyncio.sleep(1)
-
     # Parse proxy config from client settings
-    host = port = username = password = None
-    if static_proxy := utils.client["settings"].get("staticProxy"):
-        print(f"Static proxy setting: {static_proxy}", flush=True)
-        host, port, username, password = parse_proxy_config(static_proxy)
-    elif dynamic_proxy := utils.client["settings"].get("dynamicProxy"):
-        print(f"Dynamic proxy setting: {dynamic_proxy}", flush=True)
-        host, port, username, password = parse_proxy_config(dynamic_proxy)
+    client = await clients.find_one({"vidaId": utils.hostname})
+    if not client:
+        print("Client not found", flush=True)
+        return
+
+    proxy_config = None
+    if proxy_setting := client["settings"].get("proxy"):
+        print(f"Proxy setting: {proxy_setting}", flush=True)
+        proxy_config = await get_proxy_config(proxy_setting)
+        if proxy_config:
+            print(f"Proxy config loaded: {proxy_config['host']}:{proxy_config['port']}", flush=True)
+        else:
+            print("Failed to load proxy configuration", flush=True)
 
     # fmt: off
-    if host and port and username and password:
+    if proxy_config and proxy_config.get("host") and proxy_config.get("port") and proxy_config.get("username") and proxy_config.get("password"):
         print("Configuring upstream proxy mode...", flush=True)
         cmd = [
             "mitmdump",
-            "--mode", f"upstream:http://{host}:{port}",
-            "--upstream-auth", f"{username}:{password}",
+            "--mode", f"upstream:http://{proxy_config['host']}:{proxy_config['port']}",
+            "--upstream-auth", f"{proxy_config['username']}:{proxy_config['password']}",
             "--set", "confdir=/home/mitmproxy/.mitmproxy",
             "--showhost",
             "--scripts", "logs_to_mongodb.py",
