@@ -18,14 +18,13 @@ def parse_proxy_config(proxy: str):
     return host, port, username, password
 
 
-async def get_proxy_from_object_id(object_id: str):
+async def get_proxy_from_object_id(proxy_id: ObjectId):
     """Fetch proxy configuration from MongoDB using objectId."""
     try:
-        proxy_doc = await proxies.find_one({"_id": ObjectId(object_id)})
-        if proxy_doc:
+        if proxy_doc := await proxies.find_one({"_id": proxy_id}):
             return {
                 "host": proxy_doc["proxyAddress"],
-                "port": str(proxy_doc["port"]),
+                "port": proxy_doc["port"],
                 "username": proxy_doc["username"],
                 "password": proxy_doc["password"]
             }
