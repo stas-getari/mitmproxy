@@ -3,7 +3,6 @@ import asyncio
 import os
 from bson import ObjectId
 
-import utils
 from db import clients, proxies
 
 
@@ -56,7 +55,7 @@ async def main():
     print("Starting mitmproxy initialization...", flush=True)
 
     # Parse proxy config from client settings
-    client = await clients.find_one({"vidaId": utils.hostname})
+    client = await clients.find_one({"vidaId": os.popen("hostname").read().strip().replace("-auto-web", "")})
     if not client:
         print("Client not found", flush=True)
         return
