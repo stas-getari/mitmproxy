@@ -13,7 +13,7 @@ platforms = {
     "tinder": ["tinder"],
     "okcupid": ["okcupid"],
     "match": ["match"],
-    "bumble": ["bumble"],
+    "bumble": ["bumble", "bumbcdn"],
     "hinge": ["hinge", "sendbird"],
 }
 
