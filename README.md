@@ -180,3 +180,10 @@ update-ca-certificates  # update the system certificates
 # if you see that, then run command:
 locale-gen "en_US.UTF-8"
 ```
+
+## `frida` config
+```bash
+# Frida can be installed only via pip
+sudo apt-get install -y python3-pip
+python3 -m pip install -U frida-tools
+```
