@@ -49,13 +49,29 @@ apt-get install erofs-utils -y
 mkfs.erofs -zlz4 /srv/system.efs /srv/efs
 ```
 
+- **optional** step: make sure that we set "VIRT_WIFI=1" (to enable wifi) by default
+```sh
+cfg=/srv/iso/efi/boot/android.cfg
+tmp="${cfg}.tmp"
+
+awk '
+  /^[[:space:]]*submenu "VM Options -> " --class forward[[:space:]]*\{/ {in_vm=1}
+  in_vm && /^[[:space:]]*add_entry[[:space:]]/ && $0 !~ /(^|[[:space:]])VIRT_WIFI=1([[:space:]]|$)/ {$0=$0" VIRT_WIFI=1"}
+  in_vm && /^[[:space:]]*\}/ {in_vm=0}
+  {print}
+' "$cfg" > "$tmp" &&
+chown --reference="$cfg" "$tmp" &&
+chmod --reference="$cfg" "$tmp" &&
+mv "$tmp" "$cfg"
+```
+
 - build new .iso image
 ```sh
 mv /srv/system.efs /srv/iso/
 chown nobody:nogroup /srv/iso/system.efs
 chmod 644 /srv/iso/system.efs
 apt-get install xorriso -y  # install xorriso to create new (modified) .iso image
-xorriso -as mkisofs -R -f -e boot/grub/efi.img -no-emul-boot -o /srv/new_bliss.iso -J -joliet-long -cache-inodes /srv/iso  # with app xorriso create new .iso image
+xorriso -as mkisofs -R -f -e /srv/iso/boot/grub/efi.img -no-emul-boot -o /srv/new_bliss.iso -J -joliet-long -cache-inodes /srv/iso  # with app xorriso create new .iso image
 mv new_bliss.iso /var/lib/vz/template/iso/
 ```
 
