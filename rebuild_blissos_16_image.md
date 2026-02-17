@@ -71,7 +71,8 @@ mv /srv/system.efs /srv/iso/
 chown nobody:nogroup /srv/iso/system.efs
 chmod 644 /srv/iso/system.efs
 apt-get install xorriso -y  # install xorriso to create new (modified) .iso image
-xorriso -as mkisofs -R -f -e /srv/iso/boot/grub/efi.img -no-emul-boot -o /srv/new_bliss.iso -J -joliet-long -cache-inodes /srv/iso  # with app xorriso create new .iso image
+cd /srv/iso
+xorriso -as mkisofs -R -f -e boot/grub/efi.img -no-emul-boot -o /srv/new_bliss.iso -J -joliet-long -cache-inodes /srv/iso  # with app xorriso create new .iso image
 mv new_bliss.iso /var/lib/vz/template/iso/
 ```
 
