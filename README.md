@@ -181,9 +181,20 @@ update-ca-certificates  # update the system certificates
 locale-gen "en_US.UTF-8"
 ```
 
-## `frida` config
+## `scrcpy` config
 ```bash
-# Frida can be installed only via pip
-sudo apt-get install -y python3-pip
-python3 -m pip install -U frida-tools
+# 1. Install dependencies
+apt update && apt install -y ffmpeg libsdl2-2.0-0 adb wget \
+    gcc git pkg-config meson ninja-build libsdl2-dev \
+    libavcodec-dev libavdevice-dev libavformat-dev libavutil-dev \
+    libswresample-dev libusb-1.0-0 libusb-1.0-0-dev
+
+# 2. Clone and Install scrcpy
+git clone https://github.com/Genymobile/scrcpy
+cd scrcpy
+./install_release.sh
+
+# 3. Cleanup
+cd ..
+rm -rf scrcpy"
 ```
